@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP Creator - Professional Screen Recorder</title>
+    <style>
+        :root {
+            --primary-color: #8b1d1d;
+            --bg-color: #fcfaf8;
+            --card-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --border-color: #e5e5e5;
+            --accent-green: #2d6a4f;
+            --accent-red: #a4161a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .header {
+            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: inline-block;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: 500;
+            margin: 20px 0 10px 0;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .main-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .recorder-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1b4332;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #660708;
+        }
+
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        video {
+            width: 100%;
+            max-width: 800px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: #000;
+            margin-top: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .info-item {
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+        }
+
+        .info-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">SOP CREATOR</div>
+        <h1 class="title">Standard Operating Procedure Generator</h1>
+        <p class="subtitle">Comprehensive screen capture and process analysis</p>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div id="statusValue" class="info-value">Ready to Record</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Project</div>
+                <div class="info-value">New SOP Project</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date</div>
+                <div class="info-value" id="currentDate"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="recorder-card">
+            <div class="section-title">Recording Interface</div>
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">Start Capture</button>
+                <button id="stopBtn" class="btn btn-danger" disabled>Stop Capture</button>
+            </div>
+            <video id="preview" controls></video>
+        </div>
+    </main>
+
+    <footer class="footer">
+        &copy; 2026 SOP Creator. Professional Documentation Tools.
+    </footer>
+
+    <script>
+        document.getElementById("currentDate").innerText = new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const preview = document.getElementById("preview");
+        const statusValue = document.getElementById("statusValue");
+
+        startBtn.addEventListener("click", async () => {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: "always" },
+                    audio: true
+                });
+
+                preview.srcObject = stream;
+                preview.play();
+
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: "video/webm" });
+                    recordedChunks = [];
+                    const url = URL.createObjectURL(blob);
+                    preview.srcObject = null;
+                    preview.src = url;
+                    preview.controls = true;
+                    statusValue.innerText = "Recording Complete";
+                    statusValue.style.color = "#2d6a4f";
+                };
+
+                mediaRecorder.start();
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                statusValue.innerText = "Recording in Progress...";
+                statusValue.style.color = "#a4161a";
+
+            } catch (err) {
+                console.error("Error: " + err);
+                alert("Could not start screen capture. Please make sure you granted permission.");
+            }
+        });
+
+        stopBtn.addEventListener("click", () => {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            if (preview.srcObject) {
+                preview.srcObject.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
